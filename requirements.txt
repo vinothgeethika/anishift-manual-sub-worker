@@ -1,0 +1,10 @@
+google-api-core==2.34.0
+requests
+firebase-admin
+pysubs2
+deep-translator
+requests-toolbelt
+beautifulsoup4
+python-dotenv
+chardet
+patool
