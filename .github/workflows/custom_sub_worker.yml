@@ -1,0 +1,60 @@
+name: Custom Subtitle Cloud Worker
+
+on:
+  repository_dispatch:
+    types: [custom_sub_job]
+
+concurrency:
+  group: custom-sub-${{ github.event.client_payload.job_id || github.event.client_payload.anilist_id }}
+  cancel-in-progress: false
+
+jobs:
+  process_custom_subtitle:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Cache Pip Packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-custom-sub-pip-${{ hashFiles('.github/workflows/*.yml', 'requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-custom-sub-pip-
+
+      - name: Install System Dependencies (curl, p7zip, unrar)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl p7zip-full unrar
+
+      - name: Install Python Dependencies
+        run: |
+          pip install --upgrade pip
+          pip install google-api-core==2.34.0 requests firebase-admin pysubs2 deep-translator requests-toolbelt beautifulsoup4 python-dotenv chardet patool
+
+      - name: Setup Firebase Credentials
+        env:
+          FIREBASE_JSON: ${{ secrets.FIREBASE_JSON }}
+        run: |
+          if [ -n "$FIREBASE_JSON" ]; then
+            echo "$FIREBASE_JSON" > serviceAccountKey.json
+          fi
+
+      - name: Run Cloud Custom Subtitle Worker
+        env:
+          PYTHONUNBUFFERED: 1
+          JOB_PAYLOAD: ${{ toJSON(github.event.client_payload) }}
+          FIREBASE_DB_URL: ${{ secrets.FIREBASE_DB_URL }}
+          RPMSHARE_API_TOKEN: ${{ secrets.RPMSHARE_API_TOKEN }}
+          RPMSHARE_API_TOKEN_2: ${{ secrets.RPMSHARE_API_TOKEN_2 }}
+          GITHUB_TOKEN: ${{ secrets.SUB_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+          GITHUB_REPO: ${{ secrets.SUB_GITHUB_REPO || github.repository }}
+          DEDICATED_RTDB_URL: ${{ secrets.DEDICATED_RTDB_URL || 'https://anihsift-sever-2-default-rtdb.firebaseio.com' }}
+        run: python custom_sub_worker.py
