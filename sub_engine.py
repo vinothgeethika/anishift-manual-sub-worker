@@ -261,7 +261,7 @@ def clean_sub_events(subs):
 
     return cleaned_events, unique_texts
 
-def process_sinhala_sub(sub_path, out_name=None, anime_dict=None, max_workers=5, log_prefix="[SUB-ENGINE]"):
+def process_sinhala_sub(sub_path, out_name=None, out_dir=None, anime_dict=None, max_workers=5, log_prefix="[SUB-ENGINE]"):
     """
     Complete High-Speed Guaranteed Sinhala Subtitle Processing:
     Loads file -> Cleans dialogues -> Parallel translate (VPS Safe) -> Checks Sinhala characters -> Spoken Dict -> Saves SRT
@@ -272,7 +272,8 @@ def process_sinhala_sub(sub_path, out_name=None, anime_dict=None, max_workers=5,
         return None
 
     if not out_name:
-        out_name = f"sinhala_sub_{int(time.time())}_{os.getpid()}_{uuid.uuid4().hex[:4]}.srt"
+        fname = f"sinhala_sub_{int(time.time())}_{os.getpid()}_{uuid.uuid4().hex[:4]}.srt"
+        out_name = os.path.join(out_dir, fname) if out_dir else fname
 
     try:
         enc = detect_encoding(sub_path)

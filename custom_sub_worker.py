@@ -289,7 +289,7 @@ def generate_sinhala_srt(sub_path, source_lang, out_dir=None):
     else:
         print(f"[{WORKER_ID}]    🇱🇰 Translating to Sinhala via Universal Engine...")
         try:
-            return process_sinhala_sub(sub_path, out_dir=out_dir)
+            return process_sinhala_sub(sub_path, out_name=out_name, log_prefix=f"[{WORKER_ID}]")
         except Exception as e:
             print(f"[{WORKER_ID}] ⚠️ Error translating to Sinhala: {e}")
             return None
